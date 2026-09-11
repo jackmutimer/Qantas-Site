@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qantas Domestic | Roblox Flight Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#E4002B;
+    --red-dark:#C3001F;
+    --ink:#3B3B3D;
+    --charcoal:#1A1A1C;
+    --grey:#6E7076;
+    --line:#E7E5E1;
+    --panel:#F6F5F2;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--white);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Poppins', sans-serif;
+    font-weight:700;
+    color:var(--charcoal);
+    line-height:1.08;
+  }
+  a{color:inherit; text-decoration:none;}
+  img{display:block; max-width:100%;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
+
+  /* ---------- PILL PRIMITIVES ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:15px 30px; border-radius:999px;
+    font-family:'Poppins'; font-weight:600; font-size:15px;
+    transition:background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-primary{ background:var(--red); color:var(--white); }
+  .btn-primary:hover{ background:var(--red-dark); }
+  .btn-outline{ border:1.5px solid var(--charcoal); color:var(--charcoal); }
+  .btn-outline:hover{ background:var(--charcoal); color:var(--white); }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1.5px solid var(--line); border-radius:999px;
+    padding:12px 22px; font-size:14px; font-weight:500; color:var(--ink);
+  }
+  .pill b{ color:var(--red); font-weight:700; }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:var(--white);
+    border-bottom:1px solid var(--line);
+  }
+  .navbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 32px; max-width:1180px; margin:0 auto;
+  }
+  .brand img{ height:52px; }
+  .navlinks{display:flex; gap:32px;}
+  .navlinks a{
+    color:var(--ink); font-size:14px; font-weight:500;
+    transition:color 0.15s;
+  }
+  .navlinks a:hover{color:var(--red);}
+  @media (max-width:760px){ .navlinks{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{ position:relative; background:var(--panel); overflow:hidden; }
+  .hero-photo{
+    position:absolute; inset:0;
+    background-image:url('assets/climb.png');
+    background-size:cover; background-position:center 45%;
+  }
+  .hero-photo::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.88) 38%, rgba(255,255,255,0.35) 65%, rgba(255,255,255,0.05) 100%);
+  }
+  .hero-inner{ position:relative; z-index:2; padding:100px 0 90px; max-width:640px; }
+  .hero h1{ font-size:clamp(38px, 5.4vw, 60px); }
+  .hero h1 span{ color:var(--red); }
+  .hero p{ max-width:46ch; color:var(--grey); font-size:17px; margin-top:20px; }
+  .hero-actions{ display:flex; gap:14px; margin-top:32px; flex-wrap:wrap; }
+  .hero-pills{ display:flex; gap:12px; margin-top:40px; flex-wrap:wrap; }
+
+  /* ---------- SECTION HEADS ---------- */
+  .section{ padding:90px 0; }
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:24px; margin-bottom:48px; flex-wrap:wrap;
+  }
+  .section-head h2{ font-size:clamp(28px,3.6vw,40px); }
+  .section-tag{ font-family:'Poppins'; font-size:13px; color:var(--red); font-weight:700; margin-bottom:8px; }
+  .section-sub{ max-width:42ch; color:var(--grey); font-size:15px; }
+
+  /* ---------- ROUTE CARDS (destination-card style, matches qantas.com deals grid) ---------- */
+  .route-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  @media (max-width:900px){ .route-grid{ grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .route-grid{ grid-template-columns:1fr;} }
+  .route-card{
+    border:1px solid var(--line); border-radius:20px; padding:22px;
+    background:var(--white);
+  }
+  .route-card .route-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .route-card .flight-no{ font-family:'Poppins'; font-size:12px; font-weight:700; color:var(--grey); }
+  .route-card .badge{
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px;
+  }
+  .badge.open{ background:#E7F6EE; color:#1E8A4C; }
+  .badge.board{ background:#FDF1DC; color:#B4780A; }
+  .badge.full{ background:#FCE8EA; color:var(--red); }
+  .route-card h3{ font-size:21px; margin-bottom:4px; }
+  .route-card .aircraft{ font-size:13px; color:var(--grey); margin-bottom:14px; }
+  .route-card .route-foot{ display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:14px; font-size:13px; color:var(--grey);}
+  .route-card .route-foot b{ color:var(--charcoal); font-family:'Poppins'; }
+
+  /* ---------- FLEET ---------- */
+  .fleet-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--line); border-radius:20px; overflow:hidden; }
+  @media (max-width:900px){ .fleet-grid{ grid-template-columns:repeat(2,1fr);} }
+  .fleet-card{ background:var(--white); padding:30px 26px; }
+  .fleet-card .code{ font-family:'Poppins'; font-size:12px; font-weight:700; color:var(--red); }
+  .fleet-card h3{ font-size:24px; margin:12px 0 10px; }
+  .fleet-card p{ color:var(--grey); font-size:13px; margin-bottom:18px; }
+  .fleet-card .spec{ display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-top:1px solid var(--line); }
+  .fleet-card .spec span:first-child{ color:var(--grey); }
+  .fleet-card .spec span:last-child{ font-weight:600; }
+
+  .fleet-photos{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }
+  @media (max-width:760px){ .fleet-photos{ grid-template-columns:1fr; } }
+  .fleet-photos img{ border-radius:20px; width:100%; height:100%; object-fit:cover; aspect-ratio:16/10; }
+
+  /* ---------- ECONOMY PLUS ---------- */
+  .plus{
+    background:var(--charcoal); border-radius:28px; overflow:hidden;
+    display:grid; grid-template-columns:1.1fr 1fr; align-items:stretch;
+  }
+  @media (max-width:860px){ .plus{ grid-template-columns:1fr; } }
+  .plus-copy{ padding:52px; color:var(--white); display:flex; flex-direction:column; justify-content:center; }
+  .plus-eyebrow{ color:#FF6B7F; font-family:'Poppins'; font-weight:700; font-size:13px; margin-bottom:14px; }
+  .plus h2{ color:var(--white); font-size:clamp(30px,3.6vw,42px); margin-bottom:16px; }
+  .plus p{ color:#C9C9CC; max-width:40ch; font-size:15px; margin-bottom:26px; }
+  .plus-pills{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .plus-pills .pill{ border-color:rgba(255,255,255,0.2); color:var(--white); }
+  .plus-pills .pill b{ color:#FF6B7F; }
+  .plus-photo img{ width:100%; height:100%; object-fit:cover; display:block; min-height:280px; }
+
+  /* ---------- CAREERS ---------- */
+  .careers-banner{ border-radius:24px; overflow:hidden; margin-bottom:56px; }
+  .careers-banner img{ width:100%; object-fit:cover; max-height:420px; }
+  .dept{ margin-bottom:44px; }
+  .dept:last-child{ margin-bottom:0; }
+  .dept-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:20px; }
+  .dept-head h3{ font-size:22px; }
+  .dept-head span{ font-size:13px; color:var(--grey); }
+  .crew-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  @media (max-width:900px){ .crew-grid{ grid-template-columns:repeat(2,1fr);} }
+  .role{ border:1px solid var(--line); border-radius:20px; padding:26px; }
+  .role .n{ font-family:'Poppins'; font-size:13px; color:var(--red); font-weight:700; }
+  .role h3{ font-size:21px; margin:10px 0 8px; }
+  .role p{ color:var(--grey); font-size:13px; }
+
+  /* ---------- GALLERY ---------- */
+  .gallery-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  @media (max-width:760px){ .gallery-grid{ grid-template-columns:repeat(2,1fr);} }
+  .shot{ aspect-ratio:4/3; background-size:cover; background-position:center; border-radius:18px; position:relative; overflow:hidden; }
+  .shot .cap{
+    position:absolute; left:0; right:0; bottom:0;
+    background:linear-gradient(0deg, rgba(0,0,0,0.65), transparent);
+    color:var(--white); font-family:'Poppins'; font-size:12px; font-weight:600;
+    padding:22px 14px 12px;
+  }
+
+  /* ---------- JOIN ---------- */
+  .join{ background:var(--panel); border-radius:28px; padding:60px; text-align:left; }
+  @media (max-width:640px){ .join{ padding:36px 24px; } }
+
+  /* ---------- FOOTER ---------- */
+  footer{ background:var(--charcoal); color:#B8B8BC; padding:56px 0 28px; }
+  .footer-top{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:40px; padding-bottom:36px; border-bottom:1px solid rgba(255,255,255,0.12);}
+  .footer-brand img{ height:30px; filter:brightness(0) invert(1); }
+  .footer-cols{ display:flex; gap:60px; flex-wrap:wrap; }
+  .footer-col h4{
+    font-family:'Poppins'; font-size:12px; color:var(--white); font-weight:700;
+    text-transform:uppercase; letter-spacing:0.04em; margin-bottom:14px;
+  }
+  .footer-col a{ display:block; font-size:14px; color:#B8B8BC; margin-bottom:10px; }
+  .footer-col a:hover{ color:var(--white); }
+  .footer-bottom{ display:flex; justify-content:space-between; padding-top:22px; font-size:12px; flex-wrap:wrap; gap:10px;}
+  .disclaimer{ font-size:12px; color:#8A8A90; max-width:64ch; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navbar">
+    <a href="#" class="brand"><img src="assets/qantas-logo.png" alt="Qantas"></a>
+    <div class="navlinks">
+      <a href="#routes">Routes</a>
+      <a href="#fleet">Fleet</a>
+      <a href="#plus">Economy Plus</a>
+      <a href="#careers">Careers</a>
+      <a href="#gallery">Gallery</a>
+    </div>
+    <a href="#join" class="btn btn-primary" style="padding:12px 24px; font-size:14px;">Apply to fly</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-photo"></div>
+  <div class="wrap hero-inner">
+    <h1>Fly the <span>Spirit of Australia</span>, in Roblox</h1>
+    <p>A Roblox recreation of Qantas domestic operations. Four aircraft types, every state capital, and a crew roster you grow into.</p>
+    <div class="hero-actions">
+      <a href="#join" class="btn btn-primary">Apply for a pilot slot</a>
+      <a href="#routes" class="btn btn-outline">View today's board</a>
+    </div>
+    <div class="hero-pills">
+      <div class="pill"><b>4</b> aircraft types</div>
+      <div class="pill"><b>14</b> domestic ports</div>
+      <div class="pill"><b>Domestic</b> network only</div>
+    </div>
+  </div>
+</header>
+
+<section class="section" id="routes">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag">Departures</div>
+        <h2>Today's board</h2>
+      </div>
+      <p class="section-sub">Domestic only, for now. Aircraft assigned by sector length, same as the real network.</p>
+    </div>
+
+    <div class="route-grid">
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF409</span><span class="badge open">Open</span></div>
+        <h3>SYD &rarr; MEL</h3>
+        <div class="aircraft">737-800</div>
+        <div class="route-foot"><span>Depart</span><b>06:00</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF525</span><span class="badge board">Boarding</span></div>
+        <h3>SYD &rarr; BNE</h3>
+        <div class="aircraft">A220-300</div>
+        <div class="route-foot"><span>Depart</span><b>07:15</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF775</span><span class="badge open">Open</span></div>
+        <h3>MEL &rarr; PER</h3>
+        <div class="aircraft">A321XLR</div>
+        <div class="route-foot"><span>Depart</span><b>09:05</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF2140</span><span class="badge full">Full</span></div>
+        <h3>SYD &rarr; ALB</h3>
+        <div class="aircraft">Dash 8 Q400</div>
+        <div class="route-foot"><span>Depart</span><b>10:10</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF938</span><span class="badge open">Open</span></div>
+        <h3>BNE &rarr; CNS</h3>
+        <div class="aircraft">737-800</div>
+        <div class="route-foot"><span>Depart</span><b>10:40</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF721</span><span class="badge open">Open</span></div>
+        <h3>SYD &rarr; ADL</h3>
+        <div class="aircraft">A220-300</div>
+        <div class="route-foot"><span>Depart</span><b>12:20</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF1477</span><span class="badge board">Boarding</span></div>
+        <h3>SYD &rarr; CBR</h3>
+        <div class="aircraft">Dash 8 Q400</div>
+        <div class="route-foot"><span>Depart</span><b>15:10</b></div>
+      </div>
+      <div class="route-card">
+        <div class="route-top"><span class="flight-no">QF852</span><span class="badge open">Open</span></div>
+        <h3>PER &rarr; DRW</h3>
+        <div class="aircraft">A321XLR</div>
+        <div class="route-foot"><span>Depart</span><b>17:35</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="fleet" style="background:var(--panel);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag">Fleet</div>
+        <h2>Four types, one network</h2>
+      </div>
+      <p class="section-sub">Trunk routes, thin routes and regional hops, each matched to the right aircraft.</p>
+    </div>
+
+    <div class="fleet-grid">
+      <div class="fleet-card">
+        <div class="code">QF &middot; 738</div>
+        <h3>737-800</h3>
+        <p>The domestic workhorse on trunk routes.</p>
+        <div class="spec"><span>Seats</span><span>174</span></div>
+        <div class="spec"><span>Range</span><span>5,765km</span></div>
+      </div>
+      <div class="fleet-card">
+        <div class="code">QF &middot; XLR</div>
+        <h3>A321XLR</h3>
+        <p>Long, thin domestic routes the 737 can't do efficiently.</p>
+        <div class="spec"><span>Seats</span><span>197</span></div>
+        <div class="spec"><span>Range</span><span>8,700km</span></div>
+      </div>
+      <div class="fleet-card">
+        <div class="code">QF &middot; 220</div>
+        <h3>A220-300</h3>
+        <p>Right-sized for secondary capital city routes.</p>
+        <div class="spec"><span>Seats</span><span>137</span></div>
+        <div class="spec"><span>Range</span><span>6,390km</span></div>
+      </div>
+      <div class="fleet-card">
+        <div class="code">QF &middot; Q400</div>
+        <h3>Dash 8 Q400</h3>
+        <p>Regional turboprop for the shortest hops.</p>
+        <div class="spec"><span>Seats</span><span>74</span></div>
+        <div class="spec"><span>Range</span><span>2,500km</span></div>
+      </div>
+    </div>
+
+    <div class="fleet-photos">
+      <img src="assets/landing.png" alt="737-800 landing">
+      <img src="assets/tail-city.png" alt="Tail over the city">
+    </div>
+  </div>
+</section>
+
+<section class="section" id="plus">
+  <div class="wrap">
+    <div class="plus">
+      <div class="plus-copy">
+        <div class="plus-eyebrow">Introducing</div>
+        <h2>Qantas Economy Plus</h2>
+        <p>A step up on the domestic network. More room, faster boarding, and a locker that's actually yours.</p>
+        <div class="plus-pills">
+          <div class="pill">+ extra legroom</div>
+          <div class="pill">+ faster boarding</div>
+          <div class="pill">+ priority lockers</div>
+        </div>
+        <a href="#join" class="btn btn-primary" style="align-self:flex-start;">Learn more</a>
+      </div>
+      <div class="plus-photo"><img src="assets/economy-plus.png" alt="Qantas Economy Plus seat"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="careers" style="background:var(--panel);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag">Join the team</div>
+        <h2>Careers</h2>
+      </div>
+      <p class="section-sub">Five departments keep the network running. Everyone starts at the bottom rank and works up.</p>
+    </div>
+
+    <div class="careers-banner">
+      <img src="assets/team-photo.png" alt="Qantas Domestic crew in the hangar">
+    </div>
+
+    <div class="dept">
+      <div class="dept-head"><h3>Flight Crew</h3><span>Pilots on the 737, A321XLR, A220 and Dash 8</span></div>
+      <div class="crew-grid">
+        <div class="role"><div class="n">01</div><h3>Cadet</h3><p>Onboarding, sim check and first sector.</p></div>
+        <div class="role"><div class="n">02</div><h3>First Officer</h3><p>Cleared for the full domestic network.</p></div>
+        <div class="role"><div class="n">03</div><h3>Senior First Officer</h3><p>Priority pick of peak-hour trunk routes.</p></div>
+        <div class="role"><div class="n">04</div><h3>Captain</h3><p>Roster lead, trains incoming cadets.</p></div>
+      </div>
+    </div>
+
+    <div class="dept">
+      <div class="dept-head"><h3>Cabin Crew</h3><span>Onboard service across the fleet</span></div>
+      <div class="crew-grid">
+        <div class="role"><div class="n">01</div><h3>Trainee Flight Attendant</h3><p>Safety training and first onboard shift.</p></div>
+        <div class="role"><div class="n">02</div><h3>Flight Attendant</h3><p>Rostered across domestic sectors.</p></div>
+        <div class="role"><div class="n">03</div><h3>Senior Flight Attendant</h3><p>Leads the cabin team on each flight.</p></div>
+        <div class="role"><div class="n">04</div><h3>Cabin Manager</h3><p>Oversees crew standards and training.</p></div>
+      </div>
+    </div>
+
+    <div class="dept">
+      <div class="dept-head"><h3>Ground Crew</h3><span>Gate, ramp and dispatch operations</span></div>
+      <div class="crew-grid">
+        <div class="role"><div class="n">01</div><h3>Ramp Agent</h3><p>Pushback, baggage and turnaround.</p></div>
+        <div class="role"><div class="n">02</div><h3>Gate Agent</h3><p>Boarding, priority groups and gate calls.</p></div>
+        <div class="role"><div class="n">03</div><h3>Dispatcher</h3><p>Flight release and schedule coordination.</p></div>
+        <div class="role"><div class="n">04</div><h3>Duty Manager</h3><p>Runs ground operations for the shift.</p></div>
+      </div>
+    </div>
+
+    <div class="dept">
+      <div class="dept-head"><h3>Customer Service</h3><span>Bookings, check-in and support</span></div>
+      <div class="crew-grid">
+        <div class="role"><div class="n">01</div><h3>Service Agent</h3><p>Check-in desk and passenger queries.</p></div>
+        <div class="role"><div class="n">02</div><h3>Senior Service Agent</h3><p>Handles escalations and rebookings.</p></div>
+        <div class="role"><div class="n">03</div><h3>Team Lead</h3><p>Coordinates the service desk roster.</p></div>
+        <div class="role"><div class="n">04</div><h3>Customer Service Manager</h3><p>Owns the passenger experience end to end.</p></div>
+      </div>
+    </div>
+
+    <div class="dept">
+      <div class="dept-head"><h3>Executive</h3><span>Runs the airline behind the scenes</span></div>
+      <div class="crew-grid">
+        <div class="role"><div class="n">01</div><h3>Operations Executive</h3><p>Schedules, route planning and fleet assignment.</p></div>
+        <div class="role"><div class="n">02</div><h3>HR Executive</h3><p>Recruitment, onboarding and crew welfare.</p></div>
+        <div class="role"><div class="n">03</div><h3>Marketing Executive</h3><p>Branding, socials and community events.</p></div>
+        <div class="role"><div class="n">04</div><h3>Chief Executive</h3><p>Sets direction for the whole airline.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="gallery">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag">Gallery</div>
+        <h2>From the flight deck</h2>
+      </div>
+      <p class="section-sub">Screenshots from recent domestic sectors.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="shot" style="background-image:url('assets/climb.png');"><div class="cap">Departure &middot; climb out</div></div>
+      <div class="shot" style="background-image:url('assets/gate-signage.png');"><div class="cap">Gate 5 &middot; Sydney</div></div>
+      <div class="shot" style="background-image:url('assets/cabin-logo.png');"><div class="cap">Cabin &middot; tail badge</div></div>
+      <div class="shot" style="background-image:url('assets/cabin-rows.png');"><div class="cap">Economy cabin</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="join">
+  <div class="wrap">
+    <div class="join">
+      <div class="section-tag">Apply</div>
+      <h2>Apply for a pilot slot</h2>
+      <p class="section-sub" style="margin:14px 0 30px;">Join the Roblox group, complete the cadet sim check, and you're rostered within a week.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary">Join Roblox group</a>
+        <a href="https://discord.gg/JAfg8ZAK6z" class="btn btn-outline">Join Discord</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand"><img src="assets/qantas-logo.png" alt="Qantas" style="height:42px;"></div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>Fly</h4>
+          <a href="#routes">Routes</a>
+          <a href="#fleet">Fleet</a>
+          <a href="#plus">Economy Plus</a>
+          <a href="#careers">Careers</a>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <a href="#">Roblox group</a>
+          <a href="https://discord.gg/JAfg8ZAK6z">Discord</a>
+          <a href="#gallery">Gallery</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="disclaimer">Fan-made Roblox recreation of Qantas domestic operations. Not affiliated with or endorsed by Qantas Airways Limited. Logo and imagery used for fan-project purposes only.</div>
+      <div>&copy; 2026</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
