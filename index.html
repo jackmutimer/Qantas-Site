@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger &mdash; Executive Financial Command Centre</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#9670;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-mark">&#9670;</span>
+      <div class="brand-text">
+        <span class="brand-name">Ledger</span>
+        <span class="brand-sub">Command Centre</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-view="dashboard"><span class="nav-ic">&#9673;</span>Dashboard</button>
+      <button class="nav-item" data-view="transactions"><span class="nav-ic">&#8801;</span>Transactions</button>
+      <button class="nav-item" data-view="budget"><span class="nav-ic">&#9636;</span>Budget</button>
+      <button class="nav-item" data-view="goals"><span class="nav-ic">&#9678;</span>Goals</button>
+      <button class="nav-item" data-view="upcoming"><span class="nav-ic">&#9200;</span>Upcoming</button>
+      <button class="nav-item" data-view="assets"><span class="nav-ic">&#9670;</span>Assets</button>
+      <button class="nav-item" data-view="rewards"><span class="nav-ic">&#9992;</span>Rewards</button>
+      <button class="nav-item" data-view="analytics"><span class="nav-ic">&#9776;</span>Analytics</button>
+      <button class="nav-item" data-view="settings"><span class="nav-ic">&#9881;</span>Settings</button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="sync-note">
+        <span class="dot"></span>
+        <div>
+          <div class="sync-title">Stored locally</div>
+          <div class="sync-sub" id="last-updated-note">No data yet</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile top bar -->
+  <div class="mobile-bar">
+    <button id="mobile-menu-btn" class="icon-btn" aria-label="Open menu">&#9776;</button>
+    <div class="mobile-brand"><span class="brand-mark">&#9670;</span>Ledger</div>
+    <button id="mobile-add-btn" class="icon-btn" aria-label="Add transaction">&#43;</button>
+  </div>
+  <div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 id="view-title">Dashboard</h1>
+        <p id="view-date" class="view-date"></p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" id="theme-toggle" title="Toggle theme">&#9789;</button>
+        <button class="btn btn-primary" id="quick-add-btn">+ Add Transaction</button>
+      </div>
+    </header>
+
+    <div class="view-scroll">
+
+      <!-- DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <div class="hero-ledger" id="hero-ledger"></div>
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Financial Position</h3>
+              <span class="panel-eyebrow" id="position-health"></span>
+            </div>
+            <div id="exec-summary" class="exec-summary"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Upcoming Commitments</h3>
+              <button class="link-btn" data-goto="upcoming">View all &rarr;</button>
+            </div>
+            <div id="upcoming-preview" class="mini-list"></div>
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Spending by Category</h3>
+              <span class="panel-eyebrow">This month</span>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-dash-category"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Cash Flow Trend</h3>
+              <span class="panel-eyebrow">Last 6 months</span>
+            </div>
+            <div class="chart-wrap"><canvas id="chart-dash-trend"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Savings Goals</h3>
+              <button class="link-btn" data-goto="goals">View all &rarr;</button>
+            </div>
+            <div id="goals-preview" class="mini-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Rewards Balances</h3>
+              <button class="link-btn" data-goto="rewards">View all &rarr;</button>
+            </div>
+            <div id="rewards-preview" class="mini-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRANSACTIONS -->
+      <section class="view" id="view-transactions">
+        <div class="panel">
+          <div class="toolbar">
+            <input type="search" id="tx-search" class="input" placeholder="Search transactions&hellip;">
+            <select id="tx-filter-type" class="input select-input">
+              <option value="">All types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="transfer">Transfer</option>
+            </select>
+            <select id="tx-filter-category" class="input select-input"><option value="">All categories</option></select>
+            <input type="month" id="tx-filter-month" class="input">
+            <select id="tx-sort" class="input select-input">
+              <option value="date-desc">Newest first</option>
+              <option value="date-asc">Oldest first</option>
+              <option value="amount-desc">Amount: high to low</option>
+              <option value="amount-asc">Amount: low to high</option>
+            </select>
+            <button class="btn btn-ghost" id="tx-clear-filters">Clear</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tx-table">
+              <thead>
+                <tr><th>Date</th><th>Description</th><th>Category</th><th>Account</th><th>Type</th><th class="num">Amount</th><th></th></tr>
+              </thead>
+              <tbody id="tx-tbody"></tbody>
+            </table>
+          </div>
+          <div id="tx-empty" class="empty-state" hidden>
+            <div class="empty-mark">&#8801;</div>
+            <h4>No transactions yet</h4>
+            <p>Record your first income, expense or transfer to start building your financial picture.</p>
+            <button class="btn btn-primary" data-open="tx-modal">+ Add Transaction</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- BUDGET -->
+      <section class="view" id="view-budget">
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head"><h3>Monthly Targets</h3></div>
+            <div class="form-grid">
+              <label class="field">Monthly spending target
+                <input type="number" min="0" step="0.01" id="budget-spend-target" class="input">
+              </label>
+              <label class="field">Monthly savings target
+                <input type="number" min="0" step="0.01" id="budget-savings-target" class="input">
+              </label>
+            </div>
+            <button class="btn btn-primary" id="budget-save-targets">Save Targets</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>This Month at a Glance</h3></div>
+            <div id="budget-glance" class="mini-list"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Category Budgets</h3>
+            <button class="btn btn-secondary" id="add-cat-budget-btn">+ Set Category Budget</button>
+          </div>
+          <div id="category-budgets" class="cat-budget-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Recurring Expenses</h3>
+            <button class="btn btn-secondary" id="add-recurring-btn">+ Add Recurring Expense</button>
+          </div>
+          <div id="recurring-list" class="mini-list"></div>
+        </div>
+      </section>
+
+      <!-- GOALS -->
+      <section class="view" id="view-goals">
+        <div class="panel-head-row">
+          <h2 class="section-title">Savings Goals</h2>
+          <button class="btn btn-primary" id="add-goal-btn">+ New Goal</button>
+        </div>
+        <div id="goals-grid" class="cards-grid"></div>
+        <div id="goals-empty" class="empty-state" hidden>
+          <div class="empty-mark">&#9678;</div>
+          <h4>No goals yet</h4>
+          <p>Create a goal &mdash; an emergency buffer, a trip, a big purchase &mdash; and track your progress toward it.</p>
+          <button class="btn btn-primary" data-open="goal-modal">+ New Goal</button>
+        </div>
+      </section>
+
+      <!-- UPCOMING -->
+      <section class="view" id="view-upcoming">
+        <div class="panel-head-row">
+          <h2 class="section-title">Upcoming Expenses</h2>
+          <button class="btn btn-primary" id="add-upcoming-btn">+ Add Expense</button>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="tx-table" id="upcoming-table">
+              <thead><tr><th>Expense</th><th>Category</th><th>Due</th><th>Frequency</th><th>Committed</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
+              <tbody id="upcoming-tbody"></tbody>
+            </table>
+          </div>
+          <div id="upcoming-empty" class="empty-state" hidden>
+            <div class="empty-mark">&#9200;</div>
+            <h4>Nothing scheduled</h4>
+            <p>Add expected expenses so Available to Spend reflects what's really free to use.</p>
+            <button class="btn btn-primary" data-open="upcoming-modal">+ Add Expense</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ASSETS -->
+      <section class="view" id="view-assets">
+        <div class="kpi-grid" id="assets-kpi"></div>
+        <div class="panel-head-row">
+          <h2 class="section-title">Assets &amp; Items to Sell</h2>
+          <button class="btn btn-primary" id="add-asset-btn">+ Add Item</button>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="tx-table" id="assets-table">
+              <thead><tr><th>Item</th><th>Est. Value</th><th>Listing Price</th><th>Sale Price</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+              <tbody id="assets-tbody"></tbody>
+            </table>
+          </div>
+          <div id="assets-empty" class="empty-state" hidden>
+            <div class="empty-mark">&#9670;</div>
+            <h4>No assets tracked</h4>
+            <p>List technology or other possessions you could sell for extra cash.</p>
+            <button class="btn btn-primary" data-open="asset-modal">+ Add Item</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- REWARDS -->
+      <section class="view" id="view-rewards">
+        <div class="panel-head-row">
+          <h2 class="section-title">Rewards Portfolio</h2>
+          <button class="btn btn-primary" id="add-reward-btn">+ Add Program</button>
+        </div>
+        <div id="rewards-grid" class="cards-grid"></div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section class="view" id="view-analytics">
+        <div class="panel">
+          <div class="panel-head"><h3>Insights</h3></div>
+          <div id="insights-list" class="insights-list"></div>
+        </div>
+        <div class="grid-2col">
+          <div class="panel"><div class="panel-head"><h3>Spending by Category</h3></div><div class="chart-wrap"><canvas id="chart-category"></canvas></div></div>
+          <div class="panel"><div class="panel-head"><h3>Income vs Expenses</h3></div><div class="chart-wrap"><canvas id="chart-income-expense"></canvas></div></div>
+        </div>
+        <div class="grid-2col">
+          <div class="panel"><div class="panel-head"><h3>Monthly Spending Trend</h3></div><div class="chart-wrap"><canvas id="chart-spend-trend"></canvas></div></div>
+          <div class="panel"><div class="panel-head"><h3>Savings Growth</h3></div><div class="chart-wrap"><canvas id="chart-savings-growth"></canvas></div></div>
+        </div>
+        <div class="grid-2col">
+          <div class="panel"><div class="panel-head"><h3>Cash Flow Trend</h3></div><div class="chart-wrap"><canvas id="chart-cashflow"></canvas></div></div>
+          <div class="panel"><div class="panel-head"><h3>Budget vs Actual</h3></div><div class="chart-wrap"><canvas id="chart-budget-actual"></canvas></div></div>
+        </div>
+
+        <div class="panel" id="exec-report-panel">
+          <div class="panel-head">
+            <h3>Executive Report</h3>
+            <select id="report-month" class="input select-input"></select>
+          </div>
+          <div id="exec-report" class="exec-report"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head"><h3>General</h3></div>
+            <div class="form-grid">
+              <label class="field">Currency
+                <select id="set-currency" class="input select-input"><option value="AUD">AUD &mdash; Australian Dollar</option><option value="USD">USD &mdash; US Dollar</option><option value="EUR">EUR &mdash; Euro</option><option value="GBP">GBP &mdash; British Pound</option><option value="NZD">NZD &mdash; New Zealand Dollar</option></select>
+              </label>
+              <label class="field">Theme
+                <select id="set-theme" class="input select-input"><option value="dark">Dark</option><option value="light">Light</option></select>
+              </label>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Balances</h3></div>
+            <div class="form-grid">
+              <label class="field">Current cash (spending accounts)
+                <input type="number" step="0.01" id="set-cash" class="input">
+              </label>
+              <label class="field">Reserved savings held in cash accounts
+                <input type="number" step="0.01" id="set-reserved" class="input">
+                <span class="field-hint">Money inside your cash balance already earmarked for savings but not yet moved.</span>
+              </label>
+              <label class="field">Other assets (not itemised)
+                <input type="number" step="0.01" id="set-other-assets" class="input">
+              </label>
+              <label class="field">Liabilities
+                <input type="number" step="0.01" id="set-liabilities" class="input">
+              </label>
+            </div>
+            <button class="btn btn-primary" id="save-balances-btn">Save Balances</button>
+          </div>
+        </div>
+
+        <div class="grid-2col">
+          <div class="panel">
+            <div class="panel-head"><h3>Income &amp; Payday</h3></div>
+            <div class="form-grid">
+              <label class="field">Payday frequency
+                <select id="set-payday-freq" class="input select-input">
+                  <option value="weekly">Weekly</option>
+                  <option value="fortnightly">Fortnightly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </label>
+              <label class="field">Next payday
+                <input type="date" id="set-payday-date" class="input">
+              </label>
+              <label class="field">Expected income per payday
+                <input type="number" step="0.01" id="set-payday-amount" class="input">
+              </label>
+            </div>
+            <button class="btn btn-primary" id="save-payday-btn">Save Payday Settings</button>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Categories</h3></div>
+            <div id="category-manager" class="mini-list"></div>
+            <div class="toolbar" style="margin-top:12px;">
+              <input type="text" id="new-category-input" class="input" placeholder="New category name">
+              <button class="btn btn-secondary" id="add-category-btn">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Data &amp; Privacy</h3></div>
+          <p class="muted-p">All data is stored only in this browser's local storage, on this device. Nothing is transmitted anywhere. No bank credentials are ever requested or stored. Use the tools below to back up, move between devices, or clear your data.</p>
+          <div class="data-actions">
+            <button class="btn btn-secondary" id="export-json-btn">Export Full Backup (JSON)</button>
+            <button class="btn btn-secondary" id="export-csv-btn">Export Transactions (CSV)</button>
+            <label class="btn btn-secondary file-btn">Import Backup (JSON)<input type="file" id="import-file-input" accept="application/json" hidden></label>
+            <button class="btn btn-danger" id="reset-data-btn">Reset All Data</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<div class="modal-backdrop" id="modal-backdrop"></div>
+
+<!-- Transaction Modal -->
+<div class="modal" id="tx-modal">
+  <div class="modal-head"><h3 id="tx-modal-title">Add Transaction</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="tx-form" class="modal-body">
+    <input type="hidden" id="tx-id">
+    <div class="seg-control" id="tx-type-seg">
+      <button type="button" class="seg-btn active" data-type="expense">Expense</button>
+      <button type="button" class="seg-btn" data-type="income">Income</button>
+      <button type="button" class="seg-btn" data-type="transfer">Transfer</button>
+    </div>
+    <div class="form-grid">
+      <label class="field">Date<input required type="date" id="tx-date" class="input"></label>
+      <label class="field">Amount<input required type="number" step="0.01" min="0" id="tx-amount" class="input" placeholder="0.00"></label>
+      <label class="field" id="tx-category-field">Category
+        <select id="tx-category" class="input select-input"></select>
+      </label>
+      <label class="field">Account<input type="text" id="tx-account" class="input" placeholder="e.g. Ubank Spending"></label>
+      <label class="field field-wide">Description<input required type="text" id="tx-description" class="input" placeholder="What was this for?"></label>
+      <label class="field field-wide">Notes (optional)<input type="text" id="tx-notes" class="input"></label>
+      <label class="field" id="tx-tosavings-field">To savings (optional)<input type="number" step="0.01" min="0" id="tx-tosavings" class="input" placeholder="0.00"></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Transaction</button>
+    </div>
+  </form>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal" id="goal-modal">
+  <div class="modal-head"><h3 id="goal-modal-title">New Goal</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="goal-form" class="modal-body">
+    <input type="hidden" id="goal-id">
+    <div class="form-grid">
+      <label class="field field-wide">Goal name<input required type="text" id="goal-name" class="input" placeholder="e.g. Emergency Buffer"></label>
+      <label class="field">Target amount<input required type="number" step="0.01" min="0" id="goal-target" class="input"></label>
+      <label class="field">Current amount<input required type="number" step="0.01" min="0" id="goal-current" class="input"></label>
+      <label class="field">Target date (optional)<input type="date" id="goal-date" class="input"></label>
+      <label class="field">Monthly contribution<input type="number" step="0.01" min="0" id="goal-contribution" class="input"></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Goal</button>
+    </div>
+  </form>
+</div>
+
+<!-- Upcoming Modal -->
+<div class="modal" id="upcoming-modal">
+  <div class="modal-head"><h3 id="upcoming-modal-title">Add Upcoming Expense</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="upcoming-form" class="modal-body">
+    <input type="hidden" id="upcoming-id">
+    <div class="form-grid">
+      <label class="field field-wide">Expense<input required type="text" id="upcoming-name" class="input" placeholder="e.g. Gym membership"></label>
+      <label class="field">Amount<input required type="number" step="0.01" min="0" id="upcoming-amount" class="input"></label>
+      <label class="field">Due date<input required type="date" id="upcoming-due" class="input"></label>
+      <label class="field">Frequency
+        <select id="upcoming-frequency" class="input select-input">
+          <option value="once">One-off</option>
+          <option value="weekly">Weekly</option>
+          <option value="fortnightly">Fortnightly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </label>
+      <label class="field">Category
+        <select id="upcoming-category" class="input select-input"></select>
+      </label>
+      <label class="field checkbox-field"><input type="checkbox" id="upcoming-committed" checked> Committed (reduces Available to Spend)</label>
+      <label class="field checkbox-field"><input type="checkbox" id="upcoming-paid"> Already paid</label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Expense</button>
+    </div>
+  </form>
+</div>
+
+<!-- Asset Modal -->
+<div class="modal" id="asset-modal">
+  <div class="modal-head"><h3 id="asset-modal-title">Add Asset</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="asset-form" class="modal-body">
+    <input type="hidden" id="asset-id">
+    <div class="form-grid">
+      <label class="field field-wide">Item<input required type="text" id="asset-item" class="input" placeholder="e.g. MacBook Pro 2021"></label>
+      <label class="field">Estimated value<input type="number" step="0.01" min="0" id="asset-est" class="input"></label>
+      <label class="field">Listing price<input type="number" step="0.01" min="0" id="asset-listing" class="input"></label>
+      <label class="field">Sale price<input type="number" step="0.01" min="0" id="asset-sale" class="input"></label>
+      <label class="field">Status
+        <select id="asset-status" class="input select-input">
+          <option value="keep">Keep</option>
+          <option value="listed">Listed</option>
+          <option value="sold">Sold</option>
+        </select>
+      </label>
+      <label class="field field-wide">Notes<input type="text" id="asset-notes" class="input"></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Item</button>
+    </div>
+  </form>
+</div>
+
+<!-- Reward Modal -->
+<div class="modal" id="reward-modal">
+  <div class="modal-head"><h3 id="reward-modal-title">Edit Rewards Program</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="reward-form" class="modal-body">
+    <input type="hidden" id="reward-id">
+    <div class="form-grid">
+      <label class="field field-wide">Program name<input required type="text" id="reward-name" class="input" placeholder="e.g. Qantas Frequent Flyer"></label>
+      <label class="field">Current balance<input required type="number" step="1" min="0" id="reward-balance" class="input"></label>
+      <label class="field">Target<input type="number" step="1" min="0" id="reward-target" class="input"></label>
+      <label class="field field-wide">Activity / expiry note<input type="text" id="reward-expiry" class="input" placeholder="e.g. Points expire after 18 months without activity"></label>
+      <label class="field field-wide">Notes<input type="text" id="reward-notes" class="input"></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Program</button>
+    </div>
+  </form>
+</div>
+
+<!-- Category Budget Modal -->
+<div class="modal" id="catbudget-modal">
+  <div class="modal-head"><h3>Set Category Budget</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="catbudget-form" class="modal-body">
+    <div class="form-grid">
+      <label class="field">Category
+        <select id="catbudget-category" class="input select-input"></select>
+      </label>
+      <label class="field">Monthly budget<input required type="number" step="0.01" min="0" id="catbudget-amount" class="input"></label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save Budget</button>
+    </div>
+  </form>
+</div>
+
+<!-- Recurring Expense Modal -->
+<div class="modal" id="recurring-modal">
+  <div class="modal-head"><h3 id="recurring-modal-title">Add Recurring Expense</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <form id="recurring-form" class="modal-body">
+    <input type="hidden" id="recurring-id">
+    <div class="form-grid">
+      <label class="field field-wide">Name<input required type="text" id="recurring-name" class="input" placeholder="e.g. Netflix"></label>
+      <label class="field">Amount<input required type="number" step="0.01" min="0" id="recurring-amount" class="input"></label>
+      <label class="field">Frequency
+        <select id="recurring-frequency" class="input select-input">
+          <option value="weekly">Weekly</option>
+          <option value="fortnightly">Fortnightly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </label>
+      <label class="field">Category
+        <select id="recurring-category" class="input select-input"></select>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</div>
+
+<!-- Afford Tool Modal -->
+<div class="modal modal-wide" id="afford-modal">
+  <div class="modal-head"><h3>Can I Afford This?</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <label class="field">Purchase price<input type="number" step="0.01" min="0" id="afford-price" class="input"></label>
+      <label class="field">Category (optional)
+        <select id="afford-category" class="input select-input"><option value="">&mdash;</option></select>
+      </label>
+      <label class="field">Desired purchase date (optional)<input type="date" id="afford-date" class="input"></label>
+    </div>
+    <button class="btn btn-primary" id="afford-calc-btn" type="button">Check Affordability</button>
+    <div id="afford-result" class="afford-result"></div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal modal-small" id="confirm-modal">
+  <div class="modal-head"><h3 id="confirm-title">Are you sure?</h3><button class="icon-btn modal-close" data-close>&times;</button></div>
+  <div class="modal-body">
+    <p id="confirm-message" class="muted-p"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="afford-fab" title="Can I afford this?">$?</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
